@@ -36,7 +36,7 @@
     self.titleLabel = [[UILabel alloc] init];
     self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
     self.titleLabel.numberOfLines = 0; // 自动换行
-    self.titleLabel.font = [UIFont systemFontOfSize:16];
+    self.titleLabel.font = [UIFont systemFontOfSize:20];
     self.titleLabel.lineBreakMode = NSLineBreakByTruncatingTail; // 超出部分省略
     [self.contentView addSubview:self.titleLabel];
     
@@ -45,8 +45,8 @@
         // 图片视图约束（右侧）
         [self.newsImageView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-10], // 右边缘距10
         [self.newsImageView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor], // 垂直居中
-        [self.newsImageView.widthAnchor constraintEqualToConstant:140], // 图片宽度（增大减少裁剪）
-        [self.newsImageView.heightAnchor constraintEqualToConstant:140], // 图片高度（减少裁剪）
+        [self.newsImageView.widthAnchor constraintEqualToConstant:100], // 图片宽度（增大减少裁剪）
+        [self.newsImageView.heightAnchor constraintEqualToConstant:80], // 图片高度（减少裁剪）
         
         // 标题标签约束（左侧）
         [self.titleLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:10], // 左边缘距10
@@ -56,16 +56,6 @@
     ]];
 }
 
-//- (void)configureWithNews:(NewsModel *)news {
-//    self.titleLabel.text = news.title;
-//
-//    // 加载网络图片（使用 SDWebImage）
-//    if (news.imageUrl) {
-//        [self.thumbnailImageView sd_setImageWithURL:[NSURL URLWithString:news.imageUrl]
-//                                  placeholderImage:[UIImage imageNamed:@"placeholder"]];
-//    } else {
-//        self.thumbnailImageView.image = [UIImage imageNamed:@"placeholder"];
-//    }
-//}
+
 
 @end

@@ -9,9 +9,9 @@
 
 @interface NewsDetailViewController ()
 
-@property (nonatomic, strong) UILabel *titleLabel;
-@property (nonatomic, strong) UILabel *contentLabel;
-@property (nonatomic, strong) UIImageView *imageView;
+//@property (nonatomic, strong) UILabel *titleLabel;
+//@property (nonatomic, strong) UILabel *contentLabel;
+//@property (nonatomic, strong) UIImageView *imageView;
 
 @end
 
@@ -20,54 +20,38 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
-    self.navigationItem.title = @"新闻详情";
     
-    // 大图
-    _imageView = [[UIImageView alloc] init];
-    _imageView.contentMode = UIViewContentModeScaleAspectFill;
-    _imageView.clipsToBounds = YES;
-    _imageView.image = _newsImage;
-    [self.view addSubview:_imageView];
+    // 确保模型数据已传递
+    if (!self.newsModel) {
+        NSLog(@"警告：未传递新闻数据");
+        return;
+    }
     
-    // 标题
-    _titleLabel = [[UILabel alloc] init];
-    _titleLabel.font = [UIFont boldSystemFontOfSize:20];
-    _titleLabel.numberOfLines = 0;
-    _titleLabel.text = @"新闻"; // 设置传入的标题
-    [self.view addSubview:_titleLabel];
+    // 4.1 显示标题
+    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 80, self.view.bounds.size.width - 40, 60)];
+    titleLabel.numberOfLines = 0; // 支持多行
+    titleLabel.font = [UIFont boldSystemFontOfSize:20];
+    titleLabel.text = self.newsModel.title; // 使用传递的标题
+    [self.view addSubview:titleLabel];
     
-    // 内容
-    _contentLabel = [[UILabel alloc] init];
-    _contentLabel.font = [UIFont boldSystemFontOfSize:16];
-    _contentLabel.numberOfLines = 0;
-    _contentLabel.text = _newsContent;
-    [self.view addSubview:_contentLabel];
-
-    // 设置约束（Auto Layout）
-    _imageView.translatesAutoresizingMaskIntoConstraints = NO;
-    _titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    _contentLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    // 4.2 显示图片（如果有）
+    if (self.newsModel.image) {
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 160, self.view.bounds.size.width - 40, 200)];
+        imageView.contentMode = UIViewContentModeScaleAspectFill;
+        imageView.clipsToBounds = YES;
+        imageView.image = self.newsModel.image; // 使用传递的图片
+        [self.view addSubview:imageView];
+    }
     
-    [NSLayoutConstraint activateConstraints:@[
-        // 大图（顶部 + 左右撑满，高度固定）
-        [_imageView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor],
-        [_imageView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
-        [_imageView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
-        [_imageView.heightAnchor constraintEqualToConstant:200],
-        
-        // 标题（在大图下方，左右有边距）
-        [_titleLabel.topAnchor constraintEqualToAnchor:_imageView.bottomAnchor constant:20],
-        [_titleLabel.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:16],
-        [_titleLabel.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-16],
-        
-        // 内容（在标题下方）
-        [_contentLabel.topAnchor constraintEqualToAnchor:_titleLabel.bottomAnchor constant:10],
-        [_contentLabel.leadingAnchor constraintEqualToAnchor:_titleLabel.leadingAnchor],
-        [_contentLabel.trailingAnchor constraintEqualToAnchor:_titleLabel.trailingAnchor],
-        [_contentLabel.bottomAnchor constraintLessThanOrEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-20]
-    ]];
-    
+    // 4.3 显示详情内容（如果API返回了内容字段，这里替换为实际字段）
+    UILabel *contentLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 380, self.view.bounds.size.width - 40, 300)];
+    contentLabel.numberOfLines = 0;
+    contentLabel.font = [UIFont systemFontOfSize:16];
+    // 注意：如果API返回的模型中有content字段，直接用 self.newsModel.content
+    contentLabel.text = @"这里是新闻的详细内容...";
+    [self.view addSubview:contentLabel];
 }
+
 
 /*
 #pragma mark - Navigation

@@ -105,7 +105,7 @@
                             
                             // 打印每个新闻的标题和图片URL
                             NSLog(@"新闻标题: %@", newsModel.title);
-                            NSLog(@"图片URL: %@", newsModel.imageUrl);
+//                            NSLog(@"图片URL: %@", newsModel.imageUrl);
                         }
                         
                         dispatch_async(dispatch_get_main_queue(), ^{
@@ -192,6 +192,7 @@
                 NSLog(@"无效的图片 URL: %@", realUrlString);
                 return;
             }
+
             // 请求真实图片 URL
             NSData *imageData = [NSData dataWithContentsOfURL:imageUrl];
             if (imageData) {
@@ -217,12 +218,17 @@
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-
+    // 获取当前点击的新闻模型
+    NewsModel *selectedNews = self.newsList[indexPath.item];
+    
     NewsDetailViewController *detailVC = [[NewsDetailViewController alloc] init];
-    detailVC.title = [NSString stringWithFormat:@"%@", @(indexPath.row)];
-    detailVC.newsTitle = [NSString stringWithFormat:@"新闻标题 %ld", (long)indexPath.row];
-    detailVC.newsContent = @"这里是新闻的详细内容，可以是多行文本。实际开发中应从网络或数据库加载。";
-    detailVC.newsImage = [UIImage systemImageNamed:@"house"];
+//    detailVC.title = [NSString stringWithFormat:@"%@", @(indexPath.row)];
+//    detailVC.newsTitle = [NSString stringWithFormat:@"新闻标题 %ld", (long)indexPath.row];
+//    detailVC.newsContent = @"这里是新闻的详细内容，可以是多行文本。实际开发中应从网络或数据库加载。";
+//    detailVC.newsImage = [UIImage systemImageNamed:@"house"];
+    detailVC.newsModel = selectedNews;
+    
+//    detailVC.title = selectedNews.title;
     
     [self.navigationController pushViewController:detailVC animated:YES];
 }

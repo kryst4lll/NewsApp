@@ -38,29 +38,32 @@
     return self;
 }
 
-- (NSString *)realImageUrl {
-    if (!self.imageUrl || ![self.imageUrl containsString:@"url="]) {
-        return self.imageUrl; // 非代理 URL，直接返回
-    }
-    
-    // 从代理 URL 中提取 Base64 编码的真实 URL
-    NSRange urlRange = [self.imageUrl rangeOfString:@"url=" options:NSBackwardsSearch];
-    if (urlRange.location != NSNotFound) {
-        NSString *encodedUrl = [self.imageUrl substringFromIndex:urlRange.location + urlRange.length];
-        
-        // 处理可能的 URL 编码（如 %253D 是 "=" 的两次编码）
-        encodedUrl = [encodedUrl stringByRemovingPercentEncoding];
-        
-        // Base64 解码
-        NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:encodedUrl options:0];
-        if (decodedData) {
-            NSString *realUrl = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
-            return realUrl;
-        }
-    }
-    
-    return self.imageUrl; // 解析失败，返回原 URL
-}
 
+- (NSString *)realImageUrl {
+    if (![self.imageUrl containsString:@"url="]) {
+        return self.imageUrl;
+    }
+    
+    // 提取url=后的部分
+    NSArray *components = [self.imageUrl componentsSeparatedByString:@"url="];
+    if (components.count < 2) return self.imageUrl;
+    
+    NSString *encodedPart = components[1];
+    
+    // 关键修复：双重URL解码
+    NSString *urlDecoded = [[encodedPart stringByRemovingPercentEncoding] stringByRemovingPercentEncoding];
+    
+    // Base64解码
+    NSData *data = [[NSData alloc] initWithBase64EncodedString:urlDecoded options:0];
+    if (!data) {
+        NSLog(@"⚠️ Base64解码失败，原始字符串: %@", urlDecoded);
+        return self.imageUrl;
+    }
+    
+    NSString *realUrl = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    NSLog(@"✅ 解码成功:\n原始URL: %@\n最终URL: %@", self.imageUrl, realUrl);
+    
+    return realUrl;
+}
 
 @end
