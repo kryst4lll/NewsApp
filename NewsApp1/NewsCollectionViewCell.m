@@ -12,69 +12,47 @@
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-//        [self setupUI];
-        self.newsImageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 10, 100, 100)];
-        self.newsImageView.contentMode = UIViewContentModeScaleAspectFill;
-        self.newsImageView.clipsToBounds = YES;
-        [self.contentView addSubview:self.newsImageView];
-        
-        // 创建标题标签
-        self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 10, self.contentView.bounds.size.width - 130, 100)];
-        self.titleLabel.numberOfLines = 0;
-        self.titleLabel.font = [UIFont systemFontOfSize:16];
-        [self.contentView addSubview:self.titleLabel];
-        
-        // 设置单元格背景
-        self.contentView.backgroundColor = [UIColor colorWithRed:0.95 green:0.95 blue:0.95 alpha:1.0];
-        self.layer.cornerRadius = 8.0;
-        self.layer.masksToBounds = YES;
+        [self setupUI]; // 统一管理布局
     }
     return self;
 }
 
+// 单独抽取UI设置方法，便于维护
 - (void)setupUI {
-    // 1. 缩略图
-    _thumbnailImageView = [[UIImageView alloc] init];
-    _thumbnailImageView.contentMode = UIViewContentModeScaleAspectFill;
-    _thumbnailImageView.clipsToBounds = YES;
-    _thumbnailImageView.backgroundColor = [UIColor clearColor];
-    [self.contentView addSubview:_thumbnailImageView];
+    // 1. 配置容器背景
+    self.contentView.backgroundColor = [UIColor colorWithRed:0.95 green:0.95 blue:0.95 alpha:1.0];
+    self.layer.cornerRadius = 8.0;
+    self.layer.masksToBounds = YES;
     
-    // 2. 标题
-    _titleLabel = [[UILabel alloc] init];
-    _titleLabel.font = [UIFont boldSystemFontOfSize:20];
-    _titleLabel.numberOfLines = 3;
-    [self.contentView addSubview:_titleLabel];
+    // 2. 创建图片视图（右侧）
+    self.newsImageView = [[UIImageView alloc] init];
+    self.newsImageView.translatesAutoresizingMaskIntoConstraints = NO; // 禁用自动布局
+    self.newsImageView.contentMode = UIViewContentModeScaleAspectFill; // 保持比例填充
+    self.newsImageView.clipsToBounds = YES; // 裁剪超出部分
+    self.newsImageView.backgroundColor = [UIColor clearColor]; // 占位背景
+    [self.contentView addSubview:self.newsImageView];
     
-    // 3. 发布时间
-    _timeLabel = [[UILabel alloc] init];
-    _timeLabel.font = [UIFont systemFontOfSize:12];
-    _timeLabel.textColor = [UIColor grayColor];
-    [self.contentView addSubview:_timeLabel];
+    // 3. 创建标题标签（左侧）
+    self.titleLabel = [[UILabel alloc] init];
+    self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    self.titleLabel.numberOfLines = 0; // 自动换行
+    self.titleLabel.font = [UIFont systemFontOfSize:16];
+    self.titleLabel.lineBreakMode = NSLineBreakByTruncatingTail; // 超出部分省略
+    [self.contentView addSubview:self.titleLabel];
     
-    // 设置约束（Auto Layout）
-    _thumbnailImageView.translatesAutoresizingMaskIntoConstraints = NO;
-    _titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    _timeLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    
+    // 4. 约束布局（核心调整）
     [NSLayoutConstraint activateConstraints:@[
-        // 缩略图（右侧，固定宽度，上下贴边）
-        [_thumbnailImageView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor],
-        [_thumbnailImageView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor],
-        [_thumbnailImageView.widthAnchor constraintEqualToConstant:120], // 缩略图宽度
-        [_thumbnailImageView.heightAnchor constraintEqualToConstant:120], // 缩略图高度
-        [_thumbnailImageView.bottomAnchor constraintLessThanOrEqualToAnchor:self.contentView.bottomAnchor],
+        // 图片视图约束（右侧）
+        [self.newsImageView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-10], // 右边缘距10
+        [self.newsImageView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor], // 垂直居中
+        [self.newsImageView.widthAnchor constraintEqualToConstant:140], // 图片宽度（增大减少裁剪）
+        [self.newsImageView.heightAnchor constraintEqualToConstant:140], // 图片高度（减少裁剪）
         
-        // 标题（左侧，距离缩略图有间距）
-        [_titleLabel.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:10],
-        [_titleLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:10],
-        [_titleLabel.trailingAnchor constraintEqualToAnchor:_thumbnailImageView.leadingAnchor constant:-10], // 与缩略图保持间距
-        
-        // 发布时间（左侧，贴着 Cell 底部）
-        [_timeLabel.leadingAnchor constraintEqualToAnchor:_titleLabel.leadingAnchor],
-        [_timeLabel.trailingAnchor constraintEqualToAnchor:_titleLabel.trailingAnchor],
-        [_timeLabel.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-10], // 贴着底部，距离 10pt
-        [_timeLabel.topAnchor constraintGreaterThanOrEqualToAnchor:_titleLabel.bottomAnchor constant:5] // 至少距离标题 5pt
+        // 标题标签约束（左侧）
+        [self.titleLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:10], // 左边缘距10
+        [self.titleLabel.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:10], // 上边缘距10
+        [self.titleLabel.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-10], // 下边缘距10
+        [self.titleLabel.trailingAnchor constraintEqualToAnchor:self.newsImageView.leadingAnchor constant:-10] // 与图片间距10
     ]];
 }
 

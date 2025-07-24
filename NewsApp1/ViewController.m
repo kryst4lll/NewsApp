@@ -36,7 +36,7 @@
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
     flowLayout.minimumLineSpacing = 10;
     flowLayout.minimumInteritemSpacing = 10;
-    flowLayout.itemSize = CGSizeMake(self.view.bounds.size.width, 130);
+    flowLayout.itemSize = CGSizeMake(self.view.bounds.size.width, 150);
     
     self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:flowLayout];
     self.collectionView.delegate = self;
@@ -128,6 +128,8 @@
                         for (NSDictionary *itemDict in items) {
                             NewsModel *newsModel = [[NewsModel alloc] initWithDictionary:itemDict];
                             [self.newsList addObject:newsModel];
+                            // 打印每个新闻的图片 URL
+                            NSLog(@"新闻标题: %@，图片 URL: %@", newsModel.title, newsModel.imageUrl);
                         }
                         // 新增日志：确认self.newsList是否被填充
                         NSLog(@"cache状态 - 解析完成，newsList数量: %ld", self.newsList.count);
@@ -163,13 +165,6 @@
 
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     NewsCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"id" forIndexPath:indexPath];
-    
-//    //模拟数据
-//    cell.titleLabel.text = [NSString stringWithFormat:@"这里是一个新闻的标题 %ld，点击我进入查看新闻详情.这里是一个新闻的标题，点击我进入查看新闻详情", (long)indexPath.row];
-//    cell.timeLabel.text = @"2023-11-01";
-//    cell.thumbnailImageView.image = [UIImage systemImageNamed:@"house"];
-//    
-//    cell.backgroundColor = [UIColor whiteColor];
 
     // 获取新闻模型
     NewsModel *newsModel = self.newsList[indexPath.item];
@@ -177,12 +172,28 @@
     // 设置标题
     cell.titleLabel.text = newsModel.title;
     
+    if (!newsModel.imageUrl || [newsModel.imageUrl isEqualToString:@"https://whyta.cn"]){
+        cell.newsImageView.image = [UIImage systemImageNamed:@"newspaper"];
+        return cell;
+    }
+    
+    
     // 加载图片（使用异步加载，避免阻塞主线程）
     if (newsModel.imageUrl) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            NSURL *imageUrl = [NSURL URLWithString:newsModel.imageUrl];
+        cell.newsImageView.image = [UIImage systemImageNamed:@"photo"]; // 加载中占位图
+        
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+//            NSURL *imageUrl = [NSURL URLWithString:newsModel.imageUrl];
+//            NSData *imageData = [NSData dataWithContentsOfURL:imageUrl];
+            // 获取真实图片 URL
+            NSString *realUrlString = [newsModel realImageUrl];
+            NSURL *imageUrl = [NSURL URLWithString:realUrlString];
+            if (!imageUrl) {
+                NSLog(@"无效的图片 URL: %@", realUrlString);
+                return;
+            }
+            // 请求真实图片 URL
             NSData *imageData = [NSData dataWithContentsOfURL:imageUrl];
-            
             if (imageData) {
                 UIImage *image = [UIImage imageWithData:imageData];
                 newsModel.image = image;
@@ -195,6 +206,9 @@
                         cell.newsImageView.image = image;
                     }
                 });
+            }
+            else {
+//                NSLog(@"图片数据为空，URL: %@", newsModel.imageUrl);
             }
         });
     }

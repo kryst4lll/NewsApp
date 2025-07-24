@@ -20,6 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
 // 初始化方法
 - (instancetype)initWithDictionary:(NSDictionary *)dict;
 
+- (NSString *)realImageUrl;
+
 @end
 
 NS_ASSUME_NONNULL_END
