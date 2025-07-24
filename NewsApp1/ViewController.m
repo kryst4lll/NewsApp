@@ -25,7 +25,10 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     // 初始化数据数组
-    self.newsList = [NSMutableArray array];
+//    self.newsList = [NSMutableArray array];
+    self.newsList = [NSMutableArray arrayWithCapacity:0];
+    // 获取新闻数据
+    [self fetchNewsData];
     
     self.view.backgroundColor = [UIColor whiteColor];
     
@@ -33,18 +36,17 @@
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
     flowLayout.minimumLineSpacing = 10;
     flowLayout.minimumInteritemSpacing = 10;
-    flowLayout.itemSize = CGSizeMake(self.view.bounds.size.width, 120);
+    flowLayout.itemSize = CGSizeMake(self.view.bounds.size.width, 130);
     
-    UICollectionView *collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:flowLayout];
-    [collectionView registerClass:[NewsCollectionViewCell class] forCellWithReuseIdentifier:@"id"];
+    self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:flowLayout];
+    self.collectionView.delegate = self;
+    self.collectionView.dataSource = self;
+    [self.collectionView registerClass:[NewsCollectionViewCell class] forCellWithReuseIdentifier:@"id"];
     
-    collectionView.delegate = self;
-    collectionView.dataSource = self;
     
-    [self.view addSubview:collectionView];
+    [self.view addSubview:self.collectionView];
     
-    // 获取新闻数据
-    [self fetchNewsData];
+    
 }
 
 // 获取新闻数据
@@ -60,13 +62,12 @@
     NSString *urlString = [NSString stringWithFormat:@"https://whyta.cn/api/toutiao?key=%@", apiKey];
     NSURL *url = [NSURL URLWithString:urlString];
     
-    // 创建请求
+    NSLog(@"请求URL: %@", urlString);
+    
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
     
-    // 创建数据任务
     NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         
-        // 停止加载指示器（在主线程中执行）
         dispatch_async(dispatch_get_main_queue(), ^{
             [activityIndicator stopAnimating];
             [activityIndicator removeFromSuperview];
@@ -78,43 +79,84 @@
             return;
         }
         
-        // 解析JSON数据
+        // 打印原始数据
         if (data) {
+            NSString *dataString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            NSLog(@"返回数据: %@", dataString);
+            
+            // 解析JSON
             NSError *jsonError;
             NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
             
             if (!jsonError && [jsonDict isKindOfClass:[NSDictionary class]]) {
-                // 检查状态
                 NSString *status = jsonDict[@"status"];
+                NSLog(@"请求状态: %@", status);
+                
                 if ([status isEqualToString:@"success"]) {
-                    // 获取items数组
                     NSArray *items = jsonDict[@"items"];
-                    if (items && [items isKindOfClass:[NSArray class]]) {
-                        // 清空现有数据
+                    NSLog(@"items 数量: %ld", items.count);
+                    
+                    if (items && [items isKindOfClass:[NSArray class]] && items.count > 0) {
                         [self.newsList removeAllObjects];
                         
-                        // 解析每个新闻项
+                        for (NSDictionary *itemDict in items) {
+                            NewsModel *newsModel = [[NewsModel alloc] initWithDictionary:itemDict];
+                            [self.newsList addObject:newsModel];
+                            
+                            // 打印每个新闻的标题和图片URL
+                            NSLog(@"新闻标题: %@", newsModel.title);
+                            NSLog(@"图片URL: %@", newsModel.imageUrl);
+                        }
+                        
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            NSLog(@"准备刷新，当前新闻数量: %ld", self.newsList.count); // 确认此时数量 > 0
+                            NSLog(@"CollectionView 是否存在: %@", self.collectionView ? @"是" : @"否");
+                            [self.collectionView reloadData];
+                            NSLog(@"刷新后，CollectionView 可见单元格数量: %ld", self.collectionView.visibleCells.count);
+                        });
+                    } else {
+                        NSLog(@"items 为空或格式错误");
+                    }
+                }
+                else if([status isEqualToString:@"cache"]){
+                    NSArray *items = jsonDict[@"items"];
+                    // 新增日志：确认items是否存在及数量
+                    NSLog(@"cache状态 - items数量: %ld", items.count);
+                    
+                    if (items && [items isKindOfClass:[NSArray class]] && items.count > 0) {
+                        [self.newsList removeAllObjects];
                         for (NSDictionary *itemDict in items) {
                             NewsModel *newsModel = [[NewsModel alloc] initWithDictionary:itemDict];
                             [self.newsList addObject:newsModel];
                         }
+                        // 新增日志：确认self.newsList是否被填充
+                        NSLog(@"cache状态 - 解析完成，newsList数量: %ld", self.newsList.count);
                         
-                        // 刷新CollectionView（在主线程中执行）
+                        // 刷新列表（主线程）
                         dispatch_async(dispatch_get_main_queue(), ^{
+                            // 新增日志：确认刷新方法被调用
+                            NSLog(@"cache状态 - 执行reloadData，当前newsList数量: %ld", self.newsList.count);
                             [self.collectionView reloadData];
                         });
                     }
                 }
+                else {
+                    NSLog(@"请求失败，状态: %@", status);
+                }
+            } else {
+                NSLog(@"JSON解析错误: %@", jsonError.localizedDescription);
             }
+        } else {
+            NSLog(@"返回数据为空");
         }
     }];
     
-    // 启动任务
     [task resume];
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
 //    return 10;
+    NSLog(@"numberOfItemsInSection: %ld", self.newsList.count);
     return self.newsList.count;
 }
 

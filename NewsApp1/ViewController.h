@@ -8,7 +8,7 @@
 #import <UIKit/UIKit.h>
 #import "NewsModel.h"
 
-@interface ViewController : UIViewController
+@interface ViewController : UIViewController<UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) NSMutableArray<NewsModel *> *newsList; // 新闻数据数组
