@@ -12,7 +12,22 @@
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        [self setupUI];
+//        [self setupUI];
+        self.newsImageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 10, 100, 100)];
+        self.newsImageView.contentMode = UIViewContentModeScaleAspectFill;
+        self.newsImageView.clipsToBounds = YES;
+        [self.contentView addSubview:self.newsImageView];
+        
+        // 创建标题标签
+        self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 10, self.contentView.bounds.size.width - 130, 100)];
+        self.titleLabel.numberOfLines = 0;
+        self.titleLabel.font = [UIFont systemFontOfSize:16];
+        [self.contentView addSubview:self.titleLabel];
+        
+        // 设置单元格背景
+        self.contentView.backgroundColor = [UIColor colorWithRed:0.95 green:0.95 blue:0.95 alpha:1.0];
+        self.layer.cornerRadius = 8.0;
+        self.layer.masksToBounds = YES;
     }
     return self;
 }

@@ -15,6 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UILabel *titleLabel;             // 标题
 @property (nonatomic, strong) UILabel *timeLabel;              // 发布时间
 
+@property (nonatomic, strong) UIImageView *newsImageView;
+//@property (nonatomic, strong) UILabel *titleLabel;
 
 @end
 
