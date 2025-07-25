@@ -37,7 +37,7 @@ static NSString * const reuseIdentifier = @"Cell";
     
     // 设置CollectionView布局
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
-    layout.itemSize = CGSizeMake(self.view.bounds.size.width - 30, 140);
+    layout.itemSize = CGSizeMake(self.view.bounds.size.width, 100);
     layout.minimumLineSpacing = 15;
     layout.sectionInset = UIEdgeInsetsMake(15, 15, 15, 15);
     self.collectionView.collectionViewLayout = layout;
@@ -68,6 +68,7 @@ static NSString * const reuseIdentifier = @"Cell";
     NSArray *favoriteIds = [[NSUserDefaults standardUserDefaults] objectForKey:@"FavoriteNewsIds"];
     if (!favoriteIds || favoriteIds.count == 0) {
         NSLog(@"没有收藏的新闻");
+        [self.collectionView reloadData];
         return;
     }
     

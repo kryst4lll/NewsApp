@@ -41,7 +41,7 @@
     
     // 创建收藏按钮
     self.favoriteButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.favoriteButton.frame = CGRectMake(20, 10, 30, 30);
+    self.favoriteButton.frame = CGRectMake(10, 0, 20, 20);
     [self.favoriteButton setImage:[UIImage systemImageNamed:@"heart"] forState:UIControlStateNormal];
     [self.favoriteButton setImage:[UIImage systemImageNamed:@"heart.fill"] forState:UIControlStateSelected];
     [self.favoriteButton addTarget:self action:@selector(favoriteButtonTapped:) forControlEvents:UIControlEventTouchUpInside];

@@ -37,7 +37,7 @@
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
     flowLayout.minimumLineSpacing = 10;
     flowLayout.minimumInteritemSpacing = 10;
-    flowLayout.itemSize = CGSizeMake(self.view.bounds.size.width, 140);
+    flowLayout.itemSize = CGSizeMake(self.view.bounds.size.width, 100);
     
     self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:flowLayout];
     self.collectionView.delegate = self;
@@ -94,7 +94,7 @@
     [activityIndicator startAnimating];
     
     // 构建请求URL
-    NSString *apiKey = @"d5c296b91907"; 
+    NSString *apiKey = @"d8c6d4c75ba0"; 
     NSString *urlString = [NSString stringWithFormat:@"https://whyta.cn/api/toutiao?key=%@", apiKey];
     NSURL *url = [NSURL URLWithString:urlString];
     
