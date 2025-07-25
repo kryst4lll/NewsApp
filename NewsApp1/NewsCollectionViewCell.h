@@ -16,7 +16,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UILabel *timeLabel;              // 发布时间
 
 @property (nonatomic, strong) UIImageView *newsImageView;
+
+@property (nonatomic, strong) UIButton *favoriteButton; // 收藏按钮
+@property (nonatomic, copy) void(^favoriteButtonTapped)(BOOL isSelected); // 按钮点击回调
 //@property (nonatomic, strong) UILabel *titleLabel;
+
+- (void)setFavoriteState:(BOOL)isFavorite;
+
 
 @end
 

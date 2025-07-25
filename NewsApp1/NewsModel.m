@@ -56,12 +56,12 @@
     // Base64解码
     NSData *data = [[NSData alloc] initWithBase64EncodedString:urlDecoded options:0];
     if (!data) {
-        NSLog(@"⚠️ Base64解码失败，原始字符串: %@", urlDecoded);
+//        NSLog(@"⚠️ Base64解码失败，原始字符串: %@", urlDecoded);
         return self.imageUrl;
     }
     
     NSString *realUrl = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    NSLog(@"✅ 解码成功:\n原始URL: %@\n最终URL: %@", self.imageUrl, realUrl);
+//    NSLog(@"✅ 解码成功:\n原始URL: %@\n最终URL: %@", self.imageUrl, realUrl);
     
     return realUrl;
 }

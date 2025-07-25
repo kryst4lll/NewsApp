@@ -13,5 +13,7 @@
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) NSMutableArray<NewsModel *> *newsList; // 新闻数据数组
 
+- (void)saveFavoriteStatus;
+
 @end
 

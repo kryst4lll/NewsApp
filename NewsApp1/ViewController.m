@@ -9,6 +9,7 @@
 #import "NewsCollectionViewCell.h"
 #import "NewsDetailViewController.h"
 #import "NewsModel.h"
+#import "FavoriteViewController.h"
 
 @interface ViewController ()<UICollectionViewDelegate, UICollectionViewDataSource>
 
@@ -36,7 +37,7 @@
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
     flowLayout.minimumLineSpacing = 10;
     flowLayout.minimumInteritemSpacing = 10;
-    flowLayout.itemSize = CGSizeMake(self.view.bounds.size.width, 150);
+    flowLayout.itemSize = CGSizeMake(self.view.bounds.size.width, 140);
     
     self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:flowLayout];
     self.collectionView.delegate = self;
@@ -46,6 +47,7 @@
     
     [self.view addSubview:self.collectionView];
     
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"heart.fill"] style:UIBarButtonItemStylePlain target:self action:@selector(showFavoritePage)];
     
 }
 
@@ -101,6 +103,7 @@
                         
                         for (NSDictionary *itemDict in items) {
                             NewsModel *newsModel = [[NewsModel alloc] initWithDictionary:itemDict];
+                            newsModel.isFavorite = NO;
                             [self.newsList addObject:newsModel];
                             
                             // 打印每个新闻的标题和图片URL
@@ -127,6 +130,7 @@
                         [self.newsList removeAllObjects];
                         for (NSDictionary *itemDict in items) {
                             NewsModel *newsModel = [[NewsModel alloc] initWithDictionary:itemDict];
+                            newsModel.isFavorite = NO;
                             [self.newsList addObject:newsModel];
                             // 打印每个新闻的图片 URL
                             NSLog(@"新闻标题: %@，图片 URL: %@", newsModel.title, newsModel.imageUrl);
@@ -174,12 +178,11 @@
     
     if (!newsModel.imageUrl || [newsModel.imageUrl isEqualToString:@"https://whyta.cn"]){
         cell.newsImageView.image = [UIImage systemImageNamed:@"newspaper"];
-        return cell;
+//        return cell;
     }
     
-    
     // 加载图片（使用异步加载，避免阻塞主线程）
-    if (newsModel.imageUrl) {
+    else if (newsModel.imageUrl) {
         cell.newsImageView.image = [UIImage systemImageNamed:@"photo"]; // 加载中占位图
         
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
@@ -214,8 +217,70 @@
         });
     }
     
+    // 设置收藏状态
+    [cell setFavoriteState:newsModel.isFavorite];
+    
+    // 设置收藏按钮回调
+    __weak typeof(self) weakSelf = self;
+    cell.favoriteButtonTapped = ^(BOOL isSelected) {
+        NSLog(@"回调一个收藏");
+        [weakSelf handleFavoriteForNews:newsModel atIndexPath:indexPath isSelected:isSelected];
+    };
+    
     return cell;
 }
+
+
+// 处理收藏操作
+- (void)handleFavoriteForNews:(NewsModel *)newsModel atIndexPath:(NSIndexPath *)indexPath isSelected:(BOOL)isSelected {
+    // 更新模型状态
+    newsModel.isFavorite = isSelected;
+    
+    // 保存收藏状态到本地（示例：用 NSUserDefaults）
+    [self saveFavoriteStatus];
+    
+    // 显示提示
+    NSString *message = isSelected ? @"已收藏" : @"已取消收藏";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:message preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+        [self presentViewController:alert animated:YES completion:nil];
+    });
+}
+
+// 保存收藏状态到本地
+- (void)saveFavoriteStatus {
+    // 将收藏的新闻ID存入 NSUserDefaults
+    NSMutableArray *favoriteIds = [NSMutableArray array];
+    for (NewsModel *news in self.newsList) {
+        if (news.isFavorite) {
+            [favoriteIds addObject:news.newsId];
+        }
+    }
+    [[NSUserDefaults standardUserDefaults] setObject:favoriteIds forKey:@"FavoriteNewsIds"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    
+    NSLog(@"保存收藏成功，数量: %ld，IDs: %@", favoriteIds.count, favoriteIds);
+}
+
+// 从本地加载收藏状态（在 viewDidLoad 中调用）
+- (void)loadFavoriteStatus {
+    NSArray *favoriteIds = [[NSUserDefaults standardUserDefaults] objectForKey:@"FavoriteNewsIds"];
+    if (favoriteIds) {
+        for (NewsModel *news in self.newsList) {
+            news.isFavorite = [favoriteIds containsObject:news.newsId];
+        }
+    }
+}
+
+// 添加跳转到收藏页面的方法
+- (void)showFavoritePage {
+    FavoriteViewController *favoriteVC = [[FavoriteViewController alloc] initWithCollectionViewLayout:[[UICollectionViewFlowLayout alloc] init]];
+    [self.navigationController pushViewController:favoriteVC animated:YES];
+}
+
+
+
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     // 获取当前点击的新闻模型

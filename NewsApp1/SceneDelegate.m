@@ -8,6 +8,7 @@
 #import "SceneDelegate.h"
 #import "AppDelegate.h"
 #import "ViewController.h"
+#import "FavoriteViewController.h"
 
 @interface SceneDelegate ()
 
@@ -28,11 +29,10 @@
     navVC.tabBarItem.title = @"首页";
     navVC.tabBarItem.image = [UIImage systemImageNamed:@"house"]; // 系统图标
     
-    UIViewController *controller1 = [[UIViewController alloc] init];
-    controller1.view.backgroundColor = [UIColor whiteColor];
-    controller1.navigationItem.title = @"收藏页面";  // 设置标题
-    // 将controller1也嵌入到导航控制器中
-    UINavigationController *navController1 = [[UINavigationController alloc] initWithRootViewController:controller1];
+    // 创建收藏页面
+    FavoriteViewController *favoriteVC = [[FavoriteViewController alloc] initWithCollectionViewLayout:[[UICollectionViewFlowLayout alloc] init]];
+    favoriteVC.title = @"收藏";
+    UINavigationController *navController1 = [[UINavigationController alloc] initWithRootViewController:favoriteVC];
     navController1.tabBarItem.title = @"收藏";
     navController1.tabBarItem.image = [UIImage systemImageNamed:@"star"];
     

@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *url;
 @property (nonatomic, copy) NSString *imageUrl; // 图片URL
 @property (nonatomic, strong) UIImage *image;   // 图片对象
+@property (nonatomic, assign) BOOL isFavorite; // 收藏状态
 
 // 初始化方法
 - (instancetype)initWithDictionary:(NSDictionary *)dict;
