@@ -58,21 +58,21 @@
 }
 // 接收通知，更新主页面状态
 - (void)onFavoriteStatusChanged:(NSNotification *)notification {
-    // 1. 获取通知中的新闻ID
     NSString *changedNewsId = notification.userInfo[@"newsId"];
-    if (!changedNewsId) return;
+    if (!changedNewsId) return; // 安全校验：避免空ID
     
-    // 2. 遍历主页面的新闻列表，找到对应的新闻并更新状态
-    for (NewsModel *news in self.newsList) {
+    // 遍历主页面数据源，更新状态（增加越界防护）
+    for (NSInteger i = 0; i < self.newsList.count; i++) { // 用for循环而非for-in，方便索引操作
+        NewsModel *news = self.newsList[i];
         if ([news.newsId isEqualToString:changedNewsId]) {
-            // 更新为“未收藏”状态
-            news.isFavorite = NO;
-            break;
+            news.isFavorite = NO; // 更新为未收藏
+            
+            // 局部刷新：只刷新当前修改的单元格（避免全局刷新的潜在问题）
+            NSIndexPath *indexPath = [NSIndexPath indexPathForItem:i inSection:0];
+            [self.collectionView reloadItemsAtIndexPaths:@[indexPath]];
+            return; // 找到后立即返回，避免无效循环
         }
     }
-    
-    // 3. 刷新主页面列表，更新UI显示
-    [self.collectionView reloadData];
 }
 
 // 页面销毁时移除通知监听（避免内存泄漏）

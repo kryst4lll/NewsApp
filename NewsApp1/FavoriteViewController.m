@@ -9,6 +9,7 @@
 #import "NewsCollectionViewCell.h"
 #import "NewsModel.h"
 #import "ViewController.h"
+#import "NewsDetailViewController.h"
 
 @interface FavoriteViewController ()<UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource>
 
@@ -47,6 +48,9 @@ static NSString * const reuseIdentifier = @"Cell";
     
     // 加载收藏数据
     [self loadFavoriteNews];
+    
+    // 删除后检查是否为空
+    [self checkEmptyState];
 }
 
 - (void)loadFavoriteNews {
@@ -118,11 +122,11 @@ static NSString * const reuseIdentifier = @"Cell";
     
     if (!newsModel.imageUrl || [newsModel.imageUrl isEqualToString:@"https://whyta.cn"]){
         cell.newsImageView.image = [UIImage systemImageNamed:@"newspaper"];
-        return cell;
+//        return cell;
     }
     
     // 加载图片（使用异步加载，避免阻塞主线程）
-    if (newsModel.imageUrl) {
+    else if (newsModel.imageUrl) {
         cell.newsImageView.image = [UIImage systemImageNamed:@"photo"]; // 加载中占位图
         
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
@@ -168,22 +172,7 @@ static NSString * const reuseIdentifier = @"Cell";
     return cell;
 }
 
-// 处理收藏操作
-//- (void)handleFavoriteForNews:(NewsModel *)newsModel atIndexPath:(NSIndexPath *)indexPath isSelected:(BOOL)isSelected {
-//    // 更新模型状态
-//    newsModel.isFavorite = isSelected;
-//    
-//    // 保存收藏状态到本地（示例：用 NSUserDefaults）
-//    [self saveFavoriteStatus];
-//    
-//    // 显示提示
-//    NSString *message = isSelected ? @"已收藏" : @"已取消收藏";
-//    dispatch_async(dispatch_get_main_queue(), ^{
-//        UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:message preferredStyle:UIAlertControllerStyleAlert];
-//        [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
-//        [self presentViewController:alert animated:YES completion:nil];
-//    });
-//}
+
 
 // 保存收藏状态到本地
 - (void)saveFavoriteStatus {
@@ -212,54 +201,42 @@ static NSString * const reuseIdentifier = @"Cell";
 
 // 处理取消收藏
 - (void)handleFavoriteForNews:(NewsModel *)newsModel atIndexPath:(NSIndexPath *)indexPath isSelected:(BOOL)isSelected {
+    // 1. 先更新模型状态
     newsModel.isFavorite = isSelected;
-    [self updateLocalFavoriteData:newsModel];
+    
+    // 2. 先从数据源中移除（关键：必须在删除 UI 前执行）
+    NSInteger beforeCount = self.favoriteNews.count;
     [self.favoriteNews removeObject:newsModel];
-    [self.collectionView deleteItemsAtIndexPaths:@[indexPath]];
+    NSInteger afterCount = self.favoriteNews.count;
+    NSLog(@"删除前数量: %ld, 删除后数量: %ld, 待删除indexPath: %@", beforeCount, afterCount, indexPath);
     
-    // 2. 发送通知：携带取消收藏的新闻ID
-    NSDictionary *userInfo = @{@"newsId": newsModel.newsId};
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"NewsFavoriteStatusChanged"
-                                                        object:nil
-                                                      userInfo:userInfo];
+    // 3. 确保删除操作在主线程执行（关键：UI 操作必须在主线程）
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // 4. 校验 indexPath 是否有效（防止越界）
+        if (indexPath.item < beforeCount) {
+            [self.collectionView deleteItemsAtIndexPaths:@[indexPath]];
+        } else {
+            NSLog(@"indexPath 无效，跳过删除");
+            [self.collectionView reloadData]; // 无效时强制刷新
+        }
+        
+        // 5. 如果数据源为空，额外刷新一次（可选，确保 UI 同步）
+        if (afterCount == 0) {
+            [self.collectionView reloadData];
+        }
+    });
     
-    // 提示
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:@"已取消收藏" preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
     [self presentViewController:alert animated:YES completion:nil];
     
-//    // 步骤1：获取当前的UITabBarController（底边栏控制器）
-//    UITabBarController *tabBarVC = (UITabBarController *)self.navigationController.parentViewController;
-//
-//    // 步骤2：遍历底边栏的子控制器，找到主页面（ViewController）
-//    ViewController *mainVC = nil;
-//    if (tabBarVC) {
-//        for (UIViewController *vc in tabBarVC.viewControllers) {
-//            // 底边栏的子控制器通常是导航控制器（UINavigationController）
-//            if ([vc isKindOfClass:[UINavigationController class]]) {
-//                UINavigationController *nav = (UINavigationController *)vc;
-//                // 导航控制器的根控制器可能是主页面
-//                if ([nav.viewControllers.firstObject isKindOfClass:[ViewController class]]) {
-//                    mainVC = (ViewController *)nav.viewControllers.firstObject;
-//                    break;
-//                }
-//            }
-//        }
-//    }
-//    
-//    // 步骤3：更新主页面的收藏状态（安全判断，避免nil）
-//    if (mainVC && mainVC.newsList) {
-//        for (NewsModel *mainNews in mainVC.newsList) {
-//            if ([mainNews.newsId isEqualToString:newsModel.newsId]) {
-//                mainNews.isFavorite = NO; // 取消收藏
-//                break;
-//            }
-//        }
-//        [mainVC.collectionView reloadData]; // 刷新主页面
-//    } else {
-//        NSLog(@"未找到主页面，无法同步状态"); 
-//    }
+    // 6. 更新本地存储和发送通知（原有逻辑）
+    [self updateLocalFavoriteData:newsModel];
+    NSDictionary *userInfo = @{@"newsId": newsModel.newsId};
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"NewsFavoriteStatusChanged" object:nil userInfo:userInfo];
 }
+
+
 
 // 更新本地存储
 - (void)updateLocalFavoriteData:(NewsModel *)newsModel {
@@ -270,32 +247,52 @@ static NSString * const reuseIdentifier = @"Cell";
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-// 从收藏中移除新闻
-//- (void)removeFavoriteForNews:(NewsModel *)news atIndexPath:(NSIndexPath *)indexPath {
-//    // 更新模型状态
-//    news.isFavorite = NO;
-//    
-//    // 从收藏列表中移除
-//    [self.favoriteNews removeObject:news];
-//    
-//    // 更新UI
-//    [self.collectionView deleteItemsAtIndexPaths:@[indexPath]];
-//    
-//    // 保存收藏状态
-//    ViewController *mainVC = (ViewController *)self.navigationController.viewControllers.firstObject;
-//    [mainVC saveFavoriteStatus];
-//    
-//    // 显示提示
-//    dispatch_async(dispatch_get_main_queue(), ^{
-//        UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:@"已取消收藏" preferredStyle:UIAlertControllerStyleAlert];
-//        [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
-//        [self presentViewController:alert animated:YES completion:nil];
-//    });
-//}
 
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    // 获取当前点击的新闻模型
+    NewsModel *selectedNews = self.favoriteNews[indexPath.item];
+    
+    NewsDetailViewController *detailVC = [[NewsDetailViewController alloc] init];
 
+    detailVC.newsModel = selectedNews;
 
+    [self.navigationController pushViewController:detailVC animated:YES];
+}
 
+// 检查空状态，避免空数组操作
+- (void)checkEmptyState {
+    if (self.favoriteNews.count == 0) {
+        NSLog(@"收藏列表已为空");
+        
+        // 1. 创建空视图容器（铺满整个CollectionView）
+        UIView *emptyView = [[UIView alloc] init];
+        emptyView.frame = self.collectionView.bounds;
+        emptyView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight; // 随父视图拉伸
+        
+        // 2. 创建居中标签
+        UILabel *label = [[UILabel alloc] init];
+        label.text = @"暂无收藏的新闻";
+        label.textAlignment = NSTextAlignmentCenter;
+        label.translatesAutoresizingMaskIntoConstraints = NO; // 禁用自动转换frame为约束
+        [emptyView addSubview:label];
+        
+        // 3. 添加自动布局约束：让label在emptyView中居中
+        [NSLayoutConstraint activateConstraints:@[
+            // 水平居中
+            [label.centerXAnchor constraintEqualToAnchor:emptyView.centerXAnchor],
+            // 垂直居中
+            [label.centerYAnchor constraintEqualToAnchor:emptyView.centerYAnchor],
+            // 可选：限制标签宽度（避免文字过长溢出）
+            [label.leadingAnchor constraintGreaterThanOrEqualToAnchor:emptyView.leadingAnchor constant:20],
+            [label.trailingAnchor constraintLessThanOrEqualToAnchor:emptyView.trailingAnchor constant:-20]
+        ]];
+        
+        // 4. 设置CollectionView的背景视图
+        self.collectionView.backgroundView = emptyView;
+    } else {
+        self.collectionView.backgroundView = nil; // 有数据时隐藏
+    }
+}
 
 
 
