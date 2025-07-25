@@ -23,9 +23,65 @@
         @{@"title": @"背景颜色", @"type": @(SettingTypeBackgroundColor)}
     ];
     
+    
     // 注册单元格
     [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"SettingCell"];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(updateUIForSettings)
+                                                 name:@"SettingsChanged"
+                                               object:nil];
+    [self updateUIForSettings];
+    
 }
+// 更新设置页面的UI（字体和背景色）
+- (void)updateUIForSettings {
+    // 1. 更新背景颜色
+    self.tableView.backgroundColor = [self getCurrentBGColor];
+    
+    // 2. 更新字体大小（设置项标题、详情文本）
+    UIFont *titleFont = [self getCurrentTitleFont];
+    
+    // 更新导航栏标题字体
+    self.navigationController.navigationBar.titleTextAttributes = @{NSFontAttributeName: titleFont};
+    
+    // 刷新表格，让单元格应用新字体
+    [self.tableView reloadData];
+}
+
+// 复用主页面的“获取当前背景色”方法
+- (UIColor *)getCurrentBGColor {
+    BGColor color = [[NSUserDefaults standardUserDefaults] integerForKey:@"BGColor"];
+    switch (color) {
+        case BGColorLightGray: return [UIColor lightGrayColor];
+        case BGColorLightBlue: return [UIColor colorWithRed:0.9 green:0.95 blue:1.0 alpha:1.0];
+        default: return [UIColor whiteColor];
+    }
+}
+
+// 复用主页面的“获取字体”方法
+- (UIFont *)getCurrentTitleFont {
+    FontSize size = [[NSUserDefaults standardUserDefaults] integerForKey:@"FontSize"];
+    switch (size) {
+        case FontSizeSmall: return [UIFont systemFontOfSize:16];
+        case FontSizeMedium: return [UIFont systemFontOfSize:18];
+        case FontSizeLarge: return [UIFont systemFontOfSize:20];
+        default: return [UIFont systemFontOfSize:18];
+    }
+}
+
+- (UIFont *)getCurrentContentFont {
+    FontSize size = [[NSUserDefaults standardUserDefaults] integerForKey:@"FontSize"];
+    switch (size) {
+        case FontSizeSmall: return [UIFont systemFontOfSize:14];
+        case FontSizeMedium: return [UIFont systemFontOfSize:16];
+        case FontSizeLarge: return [UIFont systemFontOfSize:18];
+        default: return [UIFont systemFontOfSize:16];
+    }
+}
+
+
+
 
 #pragma mark - Table view data source
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -37,6 +93,10 @@
     NSDictionary *item = self.settingsItems[indexPath.row];
     cell.textLabel.text = item[@"title"];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator; // 右侧箭头
+    
+    cell.textLabel.font = [self getCurrentTitleFont]; // 标题字体
+    cell.detailTextLabel.font = [self getCurrentContentFont]; // 详情字体（如“中”“白色”）
+    cell.backgroundColor = [self getCurrentBGColor];
     
     // 显示当前选中值（如“中”“白色”）
     SettingType type = [item[@"type"] integerValue];

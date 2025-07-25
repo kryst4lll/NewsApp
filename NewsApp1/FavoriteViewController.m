@@ -326,6 +326,7 @@ static NSString * const reuseIdentifier = @"Cell";
         // 2. 创建居中标签
         UILabel *label = [[UILabel alloc] init];
         label.text = @"暂无收藏的新闻";
+        label.font = [self getCurrentTitleFont];
         label.textAlignment = NSTextAlignmentCenter;
         label.translatesAutoresizingMaskIntoConstraints = NO; // 禁用自动转换frame为约束
         [emptyView addSubview:label];
