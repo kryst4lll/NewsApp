@@ -53,6 +53,14 @@ static NSString * const reuseIdentifier = @"Cell";
     [self checkEmptyState];
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    // 每次进入页面时，重新加载收藏数据
+    [self loadFavoriteNews];
+    
+    [self checkEmptyState];
+}
+
 - (void)loadFavoriteNews {
     self.favoriteNews = [NSMutableArray array];
     
