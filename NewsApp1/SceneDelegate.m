@@ -9,6 +9,8 @@
 #import "AppDelegate.h"
 #import "ViewController.h"
 #import "FavoriteViewController.h"
+#import "SettingsViewController.h"
+
 
 @interface SceneDelegate ()
 
@@ -36,11 +38,11 @@
     navController1.tabBarItem.title = @"收藏";
     navController1.tabBarItem.image = [UIImage systemImageNamed:@"star"];
     
-    UIViewController *controller2 = [[UIViewController alloc] init];
+    SettingsViewController *controller2 = [[SettingsViewController alloc] init];
     
     UINavigationController *navcontroller2 = [[UINavigationController alloc] initWithRootViewController:controller2];
-    navcontroller2.tabBarItem.title = @"我的";
-    navcontroller2.tabBarItem.image = [UIImage systemImageNamed:@"person"];
+    navcontroller2.tabBarItem.title = @"设置";
+    navcontroller2.tabBarItem.image = [UIImage systemImageNamed:@"gear"];
     
     UITabBarController *tabBarController = [[UITabBarController alloc] init];
     [tabBarController setViewControllers:@[navVC, navController1, navcontroller2]];

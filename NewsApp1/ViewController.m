@@ -10,6 +10,7 @@
 #import "NewsDetailViewController.h"
 #import "NewsModel.h"
 #import "FavoriteViewController.h"
+#import "SettingsViewController.h"
 
 @interface ViewController ()<UICollectionViewDelegate, UICollectionViewDataSource>
 
@@ -54,8 +55,53 @@
                                              selector:@selector(onFavoriteStatusChanged:)
                                                  name:@"NewsFavoriteStatusChanged"
                                                object:nil];
-    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(updateUIForSettings)
+                                                 name:@"SettingsChanged"
+                                               object:nil];
+    [self updateUIForSettings];
 }
+// 实现更新UI的方法
+- (void)updateUIForSettings {
+    // 1. 更新背景颜色
+    self.view.backgroundColor = [self getCurrentBGColor];
+    
+    // 2. 更新字体大小（如标题标签、单元格文本）
+    UIFont *titleFont = [self getCurrentTitleFont];
+//    UIFont *contentFont = [self getCurrentContentFont];
+    
+    // 示例：更新导航栏标题字体
+    self.navigationController.navigationBar.titleTextAttributes = @{NSFontAttributeName: titleFont};
+    
+    // 示例：刷新列表，让单元格重新加载字体设置
+    [self.collectionView reloadData];
+}
+
+// 根据保存的设置获取背景色
+- (UIColor *)getCurrentBGColor {
+    BGColor color = [[NSUserDefaults standardUserDefaults] integerForKey:@"BGColor"];
+    switch (color) {
+        case BGColorLightGray: return [UIColor lightGrayColor];
+        case BGColorLightBlue: return [UIColor colorWithRed:0.9 green:0.95 blue:1.0 alpha:1.0]; // 浅蓝
+        default: return [UIColor whiteColor];
+    }
+}
+
+// 获取标题字体
+- (UIFont *)getCurrentTitleFont {
+    FontSize size = [[NSUserDefaults standardUserDefaults] integerForKey:@"FontSize"];
+    switch (size) {
+        case FontSizeSmall: return [UIFont systemFontOfSize:16];
+        case FontSizeMedium: return [UIFont systemFontOfSize:20];
+        case FontSizeLarge: return [UIFont systemFontOfSize:24];
+        default: return [UIFont systemFontOfSize:20];
+    }
+}
+
+
+
+
+
 // 接收通知，更新主页面状态
 - (void)onFavoriteStatusChanged:(NSNotification *)notification {
     NSString *changedNewsId = notification.userInfo[@"newsId"];
@@ -80,6 +126,7 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:@"NewsFavoriteStatusChanged"
                                                   object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"SettingsChanged" object:nil];
 }
 
 
@@ -94,7 +141,7 @@
     [activityIndicator startAnimating];
     
     // 构建请求URL
-    NSString *apiKey = @"d8c6d4c75ba0"; 
+    NSString *apiKey = @"d8c6d4c75ba0";
     NSString *urlString = [NSString stringWithFormat:@"https://whyta.cn/api/toutiao?key=%@", apiKey];
     NSURL *url = [NSURL URLWithString:urlString];
     
@@ -206,6 +253,9 @@
 
     // 获取新闻模型
     NewsModel *newsModel = self.newsList[indexPath.item];
+    
+    
+    cell.titleLabel.font = [self getCurrentTitleFont];
     
     // 设置标题
     cell.titleLabel.text = newsModel.title;

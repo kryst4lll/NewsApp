@@ -10,6 +10,7 @@
 #import "NewsModel.h"
 #import "ViewController.h"
 #import "NewsDetailViewController.h"
+#import "SettingsViewController.h"
 
 @interface FavoriteViewController ()<UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource>
 
@@ -51,7 +52,52 @@ static NSString * const reuseIdentifier = @"Cell";
     
     // 删除后检查是否为空
     [self checkEmptyState];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(updateUIForSettings)
+                                                 name:@"SettingsChanged"
+                                               object:nil];
+    [self updateUIForSettings];
 }
+// 实现更新UI的方法
+- (void)updateUIForSettings {
+    // 1. 更新背景颜色
+    self.view.backgroundColor = [self getCurrentBGColor];
+    
+    // 2. 更新字体大小（如标题标签、单元格文本）
+    UIFont *titleFont = [self getCurrentTitleFont];
+//    UIFont *contentFont = [self getCurrentContentFont];
+    
+    // 示例：更新导航栏标题字体
+    self.navigationController.navigationBar.titleTextAttributes = @{NSFontAttributeName: titleFont};
+    
+    // 示例：刷新列表，让单元格重新加载字体设置
+    [self.collectionView reloadData];
+}
+
+// 根据保存的设置获取背景色
+- (UIColor *)getCurrentBGColor {
+    BGColor color = [[NSUserDefaults standardUserDefaults] integerForKey:@"BGColor"];
+    switch (color) {
+        case BGColorLightGray: return [UIColor lightGrayColor];
+        case BGColorLightBlue: return [UIColor colorWithRed:0.9 green:0.95 blue:1.0 alpha:1.0]; // 浅蓝
+        default: return [UIColor whiteColor];
+    }
+}
+
+// 获取标题字体
+- (UIFont *)getCurrentTitleFont {
+    FontSize size = [[NSUserDefaults standardUserDefaults] integerForKey:@"FontSize"];
+    switch (size) {
+        case FontSizeSmall: return [UIFont systemFontOfSize:16];
+        case FontSizeMedium: return [UIFont systemFontOfSize:20];
+        case FontSizeLarge: return [UIFont systemFontOfSize:24];
+        default: return [UIFont systemFontOfSize:20];
+    }
+}
+
+
+
+
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
@@ -126,6 +172,9 @@ static NSString * const reuseIdentifier = @"Cell";
     // 获取新闻模型
     NewsModel *newsModel = self.favoriteNews[indexPath.item];
     
+    
+    cell.titleLabel.font = [self getCurrentTitleFont];
+
     // 设置标题
     cell.titleLabel.text = newsModel.title;
     
