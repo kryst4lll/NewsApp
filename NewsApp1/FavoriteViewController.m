@@ -23,7 +23,7 @@ static NSString * const reuseIdentifier = @"Cell";
     [super viewDidLoad];
     self.favoriteNews = [NSMutableArray array];
     self.view.backgroundColor = [UIColor whiteColor];
-    self.title = @"我的收藏";
+    self.navigationItem.title = @"我的收藏";
     
 //    NSLog(@"collectionView 是否存在: %@", self.collectionView ? @"是" : @"否");
 //    NSLog(@"collectionView 是否在视图层级中: %@", [self.collectionView isDescendantOfView:self.view] ? @"是" : @"否");
