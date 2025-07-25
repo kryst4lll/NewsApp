@@ -157,32 +157,141 @@ static NSString * const reuseIdentifier = @"Cell";
         });
     }
     
+    [cell setFavoriteState:YES];
+    // 设置收藏按钮回调
+    __weak typeof(self) weakSelf = self;
+    cell.favoriteButtonTapped = ^(BOOL isSelected) {
+        NSLog(@"回调一个收藏");
+        [weakSelf handleFavoriteForNews:newsModel atIndexPath:indexPath isSelected:NO];
+    };
     
     return cell;
 }
 
-// 从收藏中移除新闻
-- (void)removeFavoriteForNews:(NewsModel *)news atIndexPath:(NSIndexPath *)indexPath {
-    // 更新模型状态
-    news.isFavorite = NO;
+// 处理收藏操作
+//- (void)handleFavoriteForNews:(NewsModel *)newsModel atIndexPath:(NSIndexPath *)indexPath isSelected:(BOOL)isSelected {
+//    // 更新模型状态
+//    newsModel.isFavorite = isSelected;
+//    
+//    // 保存收藏状态到本地（示例：用 NSUserDefaults）
+//    [self saveFavoriteStatus];
+//    
+//    // 显示提示
+//    NSString *message = isSelected ? @"已收藏" : @"已取消收藏";
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:message preferredStyle:UIAlertControllerStyleAlert];
+//        [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+//        [self presentViewController:alert animated:YES completion:nil];
+//    });
+//}
+
+// 保存收藏状态到本地
+- (void)saveFavoriteStatus {
+    // 将收藏的新闻ID存入 NSUserDefaults
+    NSMutableArray *favoriteIds = [NSMutableArray array];
+    for (NewsModel *news in self.favoriteNews) {
+        if (news.isFavorite) {
+            [favoriteIds addObject:news.newsId];
+        }
+    }
+    [[NSUserDefaults standardUserDefaults] setObject:favoriteIds forKey:@"FavoriteNewsIds"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
     
-    // 从收藏列表中移除
-    [self.favoriteNews removeObject:news];
-    
-    // 更新UI
+    NSLog(@"保存收藏成功，数量: %ld，IDs: %@", favoriteIds.count, favoriteIds);
+}
+
+// 从本地加载收藏状态（在 viewDidLoad 中调用）
+- (void)loadFavoriteStatus {
+    NSArray *favoriteIds = [[NSUserDefaults standardUserDefaults] objectForKey:@"FavoriteNewsIds"];
+    if (favoriteIds) {
+        for (NewsModel *news in self.favoriteNews) {
+            news.isFavorite = [favoriteIds containsObject:news.newsId];
+        }
+    }
+}
+
+// 处理取消收藏
+- (void)handleFavoriteForNews:(NewsModel *)newsModel atIndexPath:(NSIndexPath *)indexPath isSelected:(BOOL)isSelected {
+    newsModel.isFavorite = isSelected;
+    [self updateLocalFavoriteData:newsModel];
+    [self.favoriteNews removeObject:newsModel];
     [self.collectionView deleteItemsAtIndexPaths:@[indexPath]];
     
-    // 保存收藏状态
-    ViewController *mainVC = (ViewController *)self.navigationController.viewControllers.firstObject;
-    [mainVC saveFavoriteStatus];
+    // 2. 发送通知：携带取消收藏的新闻ID
+    NSDictionary *userInfo = @{@"newsId": newsModel.newsId};
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"NewsFavoriteStatusChanged"
+                                                        object:nil
+                                                      userInfo:userInfo];
     
-    // 显示提示
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:@"已取消收藏" preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
-        [self presentViewController:alert animated:YES completion:nil];
-    });
+    // 提示
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:@"已取消收藏" preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+    
+//    // 步骤1：获取当前的UITabBarController（底边栏控制器）
+//    UITabBarController *tabBarVC = (UITabBarController *)self.navigationController.parentViewController;
+//
+//    // 步骤2：遍历底边栏的子控制器，找到主页面（ViewController）
+//    ViewController *mainVC = nil;
+//    if (tabBarVC) {
+//        for (UIViewController *vc in tabBarVC.viewControllers) {
+//            // 底边栏的子控制器通常是导航控制器（UINavigationController）
+//            if ([vc isKindOfClass:[UINavigationController class]]) {
+//                UINavigationController *nav = (UINavigationController *)vc;
+//                // 导航控制器的根控制器可能是主页面
+//                if ([nav.viewControllers.firstObject isKindOfClass:[ViewController class]]) {
+//                    mainVC = (ViewController *)nav.viewControllers.firstObject;
+//                    break;
+//                }
+//            }
+//        }
+//    }
+//    
+//    // 步骤3：更新主页面的收藏状态（安全判断，避免nil）
+//    if (mainVC && mainVC.newsList) {
+//        for (NewsModel *mainNews in mainVC.newsList) {
+//            if ([mainNews.newsId isEqualToString:newsModel.newsId]) {
+//                mainNews.isFavorite = NO; // 取消收藏
+//                break;
+//            }
+//        }
+//        [mainVC.collectionView reloadData]; // 刷新主页面
+//    } else {
+//        NSLog(@"未找到主页面，无法同步状态"); 
+//    }
 }
+
+// 更新本地存储
+- (void)updateLocalFavoriteData:(NewsModel *)newsModel {
+    NSMutableArray *favoriteIds = [[[NSUserDefaults standardUserDefaults] objectForKey:@"FavoriteNewsIds"] mutableCopy];
+    if (!favoriteIds) favoriteIds = [NSMutableArray array];
+    [favoriteIds removeObject:newsModel.newsId];
+    [[NSUserDefaults standardUserDefaults] setObject:favoriteIds forKey:@"FavoriteNewsIds"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+// 从收藏中移除新闻
+//- (void)removeFavoriteForNews:(NewsModel *)news atIndexPath:(NSIndexPath *)indexPath {
+//    // 更新模型状态
+//    news.isFavorite = NO;
+//    
+//    // 从收藏列表中移除
+//    [self.favoriteNews removeObject:news];
+//    
+//    // 更新UI
+//    [self.collectionView deleteItemsAtIndexPaths:@[indexPath]];
+//    
+//    // 保存收藏状态
+//    ViewController *mainVC = (ViewController *)self.navigationController.viewControllers.firstObject;
+//    [mainVC saveFavoriteStatus];
+//    
+//    // 显示提示
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:@"已取消收藏" preferredStyle:UIAlertControllerStyleAlert];
+//        [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+//        [self presentViewController:alert animated:YES completion:nil];
+//    });
+//}
 
 
 

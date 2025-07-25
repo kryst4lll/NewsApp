@@ -49,7 +49,41 @@
     
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"heart.fill"] style:UIBarButtonItemStylePlain target:self action:@selector(showFavoritePage)];
     
+    // 注册通知监听：监听收藏状态变化
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(onFavoriteStatusChanged:)
+                                                 name:@"NewsFavoriteStatusChanged"
+                                               object:nil];
+    
 }
+// 接收通知，更新主页面状态
+- (void)onFavoriteStatusChanged:(NSNotification *)notification {
+    // 1. 获取通知中的新闻ID
+    NSString *changedNewsId = notification.userInfo[@"newsId"];
+    if (!changedNewsId) return;
+    
+    // 2. 遍历主页面的新闻列表，找到对应的新闻并更新状态
+    for (NewsModel *news in self.newsList) {
+        if ([news.newsId isEqualToString:changedNewsId]) {
+            // 更新为“未收藏”状态
+            news.isFavorite = NO;
+            break;
+        }
+    }
+    
+    // 3. 刷新主页面列表，更新UI显示
+    [self.collectionView reloadData];
+}
+
+// 页面销毁时移除通知监听（避免内存泄漏）
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:@"NewsFavoriteStatusChanged"
+                                                  object:nil];
+}
+
+
+
 
 // 获取新闻数据
 - (void)fetchNewsData {
