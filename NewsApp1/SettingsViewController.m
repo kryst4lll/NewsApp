@@ -147,13 +147,16 @@
 - (void)saveBGColor:(BGColor)color {
     [[NSUserDefaults standardUserDefaults] setInteger:color forKey:@"BGColor"];
     [[NSUserDefaults standardUserDefaults] synchronize];
+    NSLog(@"保存背景色：%ld", (long)color); // 打印保存的值（0=白，1=浅灰，2=浅蓝）
     [self.tableView reloadData];
     [self postSettingChangeNotification];
 }
 
 // 读取保存的背景颜色（默认“白色”）
 - (BGColor)savedBGColor {
-    return [[NSUserDefaults standardUserDefaults] integerForKey:@"BGColor"];
+    BGColor color = [[NSUserDefaults standardUserDefaults] integerForKey:@"BGColor"];
+    NSLog(@"读取背景色：%ld", (long)color); // 验证读取的值是否正确
+    return color;
 }
 
 // 获取当前设置值的显示文本（如“中”“白色”）

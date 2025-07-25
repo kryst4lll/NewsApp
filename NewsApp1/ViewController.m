@@ -32,8 +32,7 @@
     // 获取新闻数据
     [self fetchNewsData];
     
-    self.view.backgroundColor = [UIColor whiteColor];
-    
+    self.view.backgroundColor = [UIColor clearColor];
     
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
     flowLayout.minimumLineSpacing = 10;
@@ -65,15 +64,13 @@
 - (void)updateUIForSettings {
     // 1. 更新背景颜色
     self.view.backgroundColor = [self getCurrentBGColor];
+    self.collectionView.backgroundColor = [self getCurrentBGColor];
+    self.navigationController.navigationBar.backgroundColor = [self getCurrentBGColor];
     
-    // 2. 更新字体大小（如标题标签、单元格文本）
-    UIFont *titleFont = [self getCurrentTitleFont];
-//    UIFont *contentFont = [self getCurrentContentFont];
+    NSLog(@"新背景色%@", [self getCurrentBGColor]);
+
     
-    // 示例：更新导航栏标题字体
-    self.navigationController.navigationBar.titleTextAttributes = @{NSFontAttributeName: titleFont};
-    
-    // 示例：刷新列表，让单元格重新加载字体设置
+    // 刷新列表，让单元格重新加载字体设置
     [self.collectionView reloadData];
 }
 
@@ -320,7 +317,7 @@
     // 更新模型状态
     newsModel.isFavorite = isSelected;
     
-    // 保存收藏状态到本地（示例：用 NSUserDefaults）
+    // 保存收藏状态到本地（用 NSUserDefaults）
     [self saveFavoriteStatus];
     
     // 显示提示

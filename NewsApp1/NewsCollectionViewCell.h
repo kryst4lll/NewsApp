@@ -21,6 +21,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) void(^favoriteButtonTapped)(BOOL isSelected); // 按钮点击回调
 //@property (nonatomic, strong) UILabel *titleLabel;
 
+@property (nonatomic, strong) UIView *separatorLine;
+
+- (void)setSeparatorHidden;
+
 - (void)setFavoriteState:(BOOL)isFavorite;
 
 

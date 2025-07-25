@@ -23,7 +23,7 @@ static NSString * const reuseIdentifier = @"Cell";
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.favoriteNews = [NSMutableArray array];
-    self.view.backgroundColor = [UIColor whiteColor];
+    self.view.backgroundColor = [UIColor clearColor];
     self.navigationItem.title = @"我的收藏";
     
 //    NSLog(@"collectionView 是否存在: %@", self.collectionView ? @"是" : @"否");
@@ -61,16 +61,12 @@ static NSString * const reuseIdentifier = @"Cell";
 // 实现更新UI的方法
 - (void)updateUIForSettings {
     // 1. 更新背景颜色
+    NSLog(@"新背景色%@", [self getCurrentBGColor]);
     self.view.backgroundColor = [self getCurrentBGColor];
-    
-    // 2. 更新字体大小（如标题标签、单元格文本）
-    UIFont *titleFont = [self getCurrentTitleFont];
-//    UIFont *contentFont = [self getCurrentContentFont];
-    
-    // 示例：更新导航栏标题字体
-    self.navigationController.navigationBar.titleTextAttributes = @{NSFontAttributeName: titleFont};
-    
-    // 示例：刷新列表，让单元格重新加载字体设置
+    self.collectionView.backgroundColor = [self getCurrentBGColor];
+    self.navigationController.navigationBar.backgroundColor = [self getCurrentBGColor];
+
+    // 刷新列表，让单元格重新加载字体设置
     [self.collectionView reloadData];
 }
 

@@ -19,7 +19,7 @@
 
 - (void)setupUI {
     // 1. 容器样式
-    self.contentView.backgroundColor = [UIColor colorWithRed:0.95 green:0.95 blue:0.95 alpha:1.0];
+    self.contentView.backgroundColor = [UIColor clearColor];
     self.layer.cornerRadius = 8.0;
     self.layer.masksToBounds = YES;
     
@@ -61,6 +61,20 @@
         [self.titleLabel.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-10],
         [self.titleLabel.trailingAnchor constraintEqualToAnchor:self.newsImageView.leadingAnchor constant:-10]
     ]];
+    
+    // 5. 添加分隔线
+    self.separatorLine = [[UIView alloc] init];
+    self.separatorLine.translatesAutoresizingMaskIntoConstraints = NO;
+    self.separatorLine.backgroundColor = [UIColor colorWithWhite:0.8 alpha:1.0]; // 灰色分隔线
+    [self.contentView addSubview:self.separatorLine];
+    
+    // 分隔线约束（底部全宽，高度1pt）
+    [NSLayoutConstraint activateConstraints:@[
+        [self.separatorLine.leadingAnchor constraintEqualToAnchor:self.titleLabel.leadingAnchor], // 与标题左对齐
+        [self.separatorLine.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-10], // 与右侧间隔10pt
+        [self.separatorLine.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor], // 底部对齐
+        [self.separatorLine.heightAnchor constraintEqualToConstant:1] // 线高1pt
+    ]];
 }
 
 // 按钮点击事件
@@ -76,5 +90,8 @@
     self.favoriteButton.selected = isFavorite;
 }
 
+- (void)setSeparatorHidden:(BOOL)hidden {
+    self.separatorLine.hidden = hidden;
+}
 
 @end
